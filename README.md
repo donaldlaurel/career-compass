@@ -1,2 +1,0 @@
-# career-compass
-Student Exam
