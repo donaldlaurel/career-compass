@@ -9,12 +9,6 @@ import {
 } from "./data-mappings";
 
 interface AdminContextType {
-  isLoggedIn: boolean;
-  adminPassword: string;
-  setAdminPassword: (password: string) => void;
-  login: (password: string) => boolean;
-  logout: () => void;
-
   // Data management
   questions: typeof EXAM_QUESTIONS;
   programs: typeof COLLEGE_PROGRAMS;
@@ -35,11 +29,7 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const DEFAULT_PASSWORD = "admin123";
-
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [adminPassword] = useState(DEFAULT_PASSWORD);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize data from defaults
@@ -72,18 +62,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadDataFromAPI();
   }, [refreshKey]);
-
-  const login = (password: string) => {
-    if (password === DEFAULT_PASSWORD) {
-      setIsLoggedIn(true);
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setIsLoggedIn(false);
-  };
 
   const updateQuestion = async (id: number, updatedQuestion: any) => {
     try {
@@ -287,11 +265,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   return (
     <AdminContext.Provider
       value={{
-        isLoggedIn,
-        adminPassword,
-        setAdminPassword: () => {},
-        login,
-        logout,
         questions,
         programs,
         schools,
