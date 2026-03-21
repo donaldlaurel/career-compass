@@ -30,6 +30,7 @@ interface AdminContextType {
   updateScholarships: (scholarships: typeof SCHOLARSHIPS) => Promise<void>;
 
   resetToDefaults: () => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -46,27 +47,31 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [programs, setPrograms] = useState(COLLEGE_PROGRAMS);
   const [schools, setSchools] = useState(PHILIPPINES_SCHOOLS);
   const [scholarships, setScholarships] = useState(SCHOLARSHIPS);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load from Supabase on mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await fetch("/api/questions");
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.length > 0) {
-            setQuestions(data);
-          }
+  // Function to reload data from API
+  const loadDataFromAPI = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/questions");
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          console.log("[v0] Loaded questions from API:", data);
+          setQuestions(data);
         }
-      } catch (error) {
-        console.error("Error loading questions from API:", error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("[v0] Error loading questions from API:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    loadData();
-  }, []);
+  // Load from Supabase on mount and when refresh key changes
+  useEffect(() => {
+    loadDataFromAPI();
+  }, [refreshKey]);
 
   const login = (password: string) => {
     if (password === DEFAULT_PASSWORD) {
@@ -120,8 +125,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedQuestion),
       });
+
+      // Refresh from API to ensure sync
+      setTimeout(() => setRefreshKey((prev) => prev + 1), 500);
     } catch (error) {
-      console.error("Error adding answer:", error);
+      console.error("[v0] Error adding answer:", error);
     }
   };
 
@@ -148,8 +156,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       await fetch(`/api/answers/${answerId}`, {
         method: "DELETE",
       });
+
+      // Refresh from API to ensure sync
+      setTimeout(() => setRefreshKey((prev) => prev + 1), 500);
     } catch (error) {
-      console.error("Error removing answer:", error);
+      console.error("[v0] Error removing answer:", error);
     }
   };
 
@@ -249,11 +260,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setPrograms(COLLEGE_PROGRAMS);
       setSchools(PHILIPPINES_SCHOOLS);
       setScholarships(SCHOLARSHIPS);
+
+      // Trigger refresh to sync all components
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error("Error resetting to defaults:", error);
+      console.error("[v0] Error resetting to defaults:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshData = async () => {
+    console.log("[v0] Refreshing data from API...");
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -276,6 +295,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         updateSchools,
         updateScholarships,
         resetToDefaults,
+        refreshData,
       }}
     >
       {children}
