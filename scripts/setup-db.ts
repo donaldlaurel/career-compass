@@ -79,6 +79,51 @@ async function setupDatabase() {
     );
   }
 
+  // Create schools table
+  try {
+    console.log("[v0] Creating schools table...");
+    const { error } = await supabase.rpc("exec", {
+      sql: `
+        CREATE TABLE IF NOT EXISTS schools (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          location TEXT NOT NULL,
+          programs TEXT[] DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `,
+    });
+    if (error) console.error("[v0] Error creating schools table:", error);
+  } catch (error) {
+    console.log(
+      "[v0] Schools table already exists or error:",
+      (error as Error).message
+    );
+  }
+
+  // Create scholarships table
+  try {
+    console.log("[v0] Creating scholarships table...");
+    const { error } = await supabase.rpc("exec", {
+      sql: `
+        CREATE TABLE IF NOT EXISTS scholarships (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL UNIQUE,
+          description TEXT,
+          requirements TEXT,
+          categories TEXT[] DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `,
+    });
+    if (error) console.error("[v0] Error creating scholarships table:", error);
+  } catch (error) {
+    console.log(
+      "[v0] Scholarships table already exists or error:",
+      (error as Error).message
+    );
+  }
+
   console.log("[v0] Database setup complete!");
 }
 

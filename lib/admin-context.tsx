@@ -154,26 +154,106 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updatePrograms = async (newPrograms: typeof COLLEGE_PROGRAMS) => {
-    setPrograms(newPrograms);
-    // TODO: Add API endpoint for programs
+    try {
+      setIsLoading(true);
+      // Convert programs object to array format for API
+      const programsArray = Object.entries(newPrograms).flatMap(([category, programs]) =>
+        programs.map((name: string) => ({
+          name,
+          description: category,
+        }))
+      );
+
+      const response = await fetch("/api/programs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(programsArray),
+      });
+
+      if (!response.ok) throw new Error("Failed to update programs");
+      setPrograms(newPrograms);
+    } catch (error) {
+      console.error("Error updating programs:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateSchools = async (newSchools: typeof PHILIPPINES_SCHOOLS) => {
-    setSchools(newSchools);
-    // TODO: Add API endpoint for schools
+    try {
+      setIsLoading(true);
+      // Convert schools object to array format for API
+      const schoolsArray = Object.entries(newSchools).flatMap(([location, schools]) =>
+        schools.map((school: any) => ({
+          name: school.name,
+          location,
+          programs: school.programs || [],
+        }))
+      );
+
+      const response = await fetch("/api/schools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(schoolsArray),
+      });
+
+      if (!response.ok) throw new Error("Failed to update schools");
+      setSchools(newSchools);
+    } catch (error) {
+      console.error("Error updating schools:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateScholarships = async (newScholarships: typeof SCHOLARSHIPS) => {
-    setScholarships(newScholarships);
-    // TODO: Add API endpoint for scholarships
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/scholarships", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newScholarships),
+      });
+
+      if (!response.ok) throw new Error("Failed to update scholarships");
+      setScholarships(newScholarships);
+    } catch (error) {
+      console.error("Error updating scholarships:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetToDefaults = async () => {
-    setQuestions(EXAM_QUESTIONS);
-    setPrograms(COLLEGE_PROGRAMS);
-    setSchools(PHILIPPINES_SCHOOLS);
-    setScholarships(SCHOLARSHIPS);
-    // TODO: Add API endpoint to reset
+    try {
+      setIsLoading(true);
+      // Reset questions
+      const questionsResponse = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(EXAM_QUESTIONS),
+      });
+      if (!questionsResponse.ok) throw new Error("Failed to reset questions");
+
+      // Reset programs
+      await updatePrograms(COLLEGE_PROGRAMS);
+
+      // Reset schools
+      await updateSchools(PHILIPPINES_SCHOOLS);
+
+      // Reset scholarships
+      await updateScholarships(SCHOLARSHIPS);
+
+      // Update local state
+      setQuestions(EXAM_QUESTIONS);
+      setPrograms(COLLEGE_PROGRAMS);
+      setSchools(PHILIPPINES_SCHOOLS);
+      setScholarships(SCHOLARSHIPS);
+    } catch (error) {
+      console.error("Error resetting to defaults:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
