@@ -87,19 +87,28 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const updateQuestion = async (id: number, updatedQuestion: any) => {
     try {
+      console.log("[v0] Updating question:", id, updatedQuestion);
       const newQuestions = questions.map((q) =>
         q.id === id ? updatedQuestion : q
       );
       setQuestions(newQuestions);
 
-      // Send to API
-      await fetch("/api/questions", {
+      // Send to API with full question structure
+      const response = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedQuestion),
       });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      console.log("[v0] Question updated successfully");
+      // Trigger refresh to sync all components
+      setTimeout(() => setRefreshKey((prev) => prev + 1), 300);
     } catch (error) {
-      console.error("Error updating question:", error);
+      console.error("[v0] Error updating question:", error);
     }
   };
 
