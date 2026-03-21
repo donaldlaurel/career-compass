@@ -1,8 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
-import { EXAM_QUESTIONS, COLLEGE_PROGRAMS, PHILIPPINES_SCHOOLS, SCHOLARSHIPS } from "@/lib/data-mappings";
+import { EXAM_QUESTIONS, COLLEGE_PROGRAMS, PHILIPPINES_SCHOOLS, SCHOLARSHIPS } from "../lib/data-mappings.js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    "[v0] Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+  );
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function seedData() {
@@ -43,7 +51,7 @@ async function seedData() {
 
       // Seed answers for this question
       if (question.answers && question.answers.length > 0) {
-        const answersToInsert = question.answers.map((answer: any) => ({
+        const answersToInsert = question.answers.map((answer) => ({
           question_id: question.id,
           text: answer.text,
           category: answer.category || null,
@@ -109,6 +117,7 @@ async function seedData() {
     console.log("[v0] Data seeding complete!");
   } catch (error) {
     console.error("[v0] Seed error:", error);
+    process.exit(1);
   }
 }
 
