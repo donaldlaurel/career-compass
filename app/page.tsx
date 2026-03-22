@@ -1,57 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { EmailEntry } from "@/components/email-entry";
-import { QuizFlow } from "@/components/quiz-flow";
-import { ResultsPage } from "@/components/results-page";
-import { AdminDashboard } from "@/components/admin-dashboard";
-import { useAdmin } from "@/lib/admin-context";
-import { calculateResults, QuizAnswer, ResultsData } from "@/lib/quiz-engine";
+import { Navbar } from "@/components/landing/navbar";
+import { HeroSection } from "@/components/landing/hero-section";
+import { BackgroundSection } from "@/components/landing/background-section";
+import { MoreInformationSection } from "@/components/landing/more-information-section";
+import { WhatWeDoSection } from "@/components/landing/what-we-do-section";
+import { CallToActionSection } from "@/components/landing/cta-section";
+import { AboutUsSection } from "@/components/landing/about-us-section";
 import { Button } from "@/components/ui/button";
-import { Lock, X } from "lucide-react";
+import { Lock } from "lucide-react";
+import { AdminDashboard } from "@/components/admin-dashboard";
+import { useState } from "react";
 
-type AppState = "email" | "quiz" | "results" | "admin-dashboard";
-
-function HomeContent() {
-  const [appState, setAppState] = useState<AppState>("email");
-  const [email, setEmail] = useState("");
-  const [results, setResults] = useState<ResultsData | null>(null);
+export default function Home() {
   const [showAdmin, setShowAdmin] = useState(false);
-  const { programs, schools, scholarships } = useAdmin();
-
-  const handleEmailSubmit = (submittedEmail: string) => {
-    setEmail(submittedEmail);
-    setAppState("quiz");
-  };
-
-  const handleQuizComplete = (answers: QuizAnswer[]) => {
-    const calculatedResults = calculateResults(
-      email,
-      answers,
-      programs,
-      schools,
-      scholarships
-    );
-    setResults(calculatedResults);
-    setAppState("results");
-  };
-
-  const handleRetake = () => {
-    setAppState("email");
-    setEmail("");
-    setResults(null);
-  };
-
-  const handleAdminClose = () => {
-    setShowAdmin(false);
-    setAppState("email");
-  };
 
   return (
-    <>
-      {/* Admin button (always visible when not in admin mode) */}
+    <div className="min-h-screen bg-white">
+      {/* Admin button */}
       {!showAdmin && (
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed bottom-4 right-4 z-40">
           <Button
             size="sm"
             variant="outline"
@@ -64,46 +32,26 @@ function HomeContent() {
         </div>
       )}
 
-      {/* Admin close button */}
+      {/* Admin view */}
       {showAdmin && (
-        <div className="fixed top-4 right-4 z-50">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleAdminClose}
-            className="gap-2"
-          >
-            <X className="h-4 w-4" />
-            Close
-          </Button>
+        <div>
+          <AdminDashboard onLogout={() => setShowAdmin(false)} />
         </div>
       )}
 
-      {/* Student views */}
+      {/* Landing page */}
       {!showAdmin && (
         <>
-          {appState === "email" && <EmailEntry onSubmit={handleEmailSubmit} />}
-          {appState === "quiz" && (
-            <QuizFlow
-              email={email}
-              onComplete={handleQuizComplete}
-              onBack={handleRetake}
-            />
-          )}
-          {appState === "results" && results && (
-            <ResultsPage data={results} onRetake={handleRetake} />
-          )}
+          <Navbar />
+          <HeroSection />
+          <BackgroundSection />
+          <MoreInformationSection />
+          <WhatWeDoSection />
+          <CallToActionSection />
+          <AboutUsSection />
         </>
       )}
-
-      {/* Admin view */}
-      {showAdmin && (
-        <AdminDashboard onLogout={handleAdminClose} />
-      )}
-    </>
+    </div>
   );
 }
 
-export default function Home() {
-  return <HomeContent />;
-}
